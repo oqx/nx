@@ -26,6 +26,8 @@ export interface GitCommit extends RawGitCommit {
   description: string;
   type: string;
   scope: string;
+  optionalBody: string;
+  optionalFooter: string;
   references: Reference[];
   authors: GitCommitAuthor[];
   isBreaking: boolean;
@@ -344,7 +346,7 @@ export function parseCommits(commits: RawGitCommit[]): GitCommit[] {
 // https://www.conventionalcommits.org/en/v1.0.0/
 // https://regex101.com/r/FSfNvA/1
 const ConventionalCommitRegex =
-  /(?<type>[a-z]+)(\((?<scope>.+)\))?(?<breaking>!)?: (?<description>.+)/i;
+  /(?<type>[a-zA-Z]+)(\((?<scope>.+)\))?(?<breaking>!)?: (?<description>.+)(?:\r?\n(?<body>.+))?(?:\r?\n(?<footer>.+))?/i;
 const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 const IssueRE = /(#\d+)/gm;
@@ -358,6 +360,10 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   }
 
   const scope = match.groups.scope || '';
+
+  const optionalBody = match.groups.body || '';
+
+  const optionalFooter = match.groups.footer || '';
 
   const isBreaking =
     Boolean(match.groups.breaking) || commit.body.includes('BREAKING CHANGE:');
@@ -415,6 +421,8 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     description,
     type,
     scope,
+    optionalBody,
+    optionalFooter,
     references,
     isBreaking,
     revertedHashes,
